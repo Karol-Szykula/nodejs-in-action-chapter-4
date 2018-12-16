@@ -1,0 +1,1 @@
+This is reposiotry that contains excercises from a book Node.js in Action [https://www.manning.com/books/node-js-in-action-second-edition](https://www.manning.com/books/node-js-in-action-second-edition)
