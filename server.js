@@ -1,16 +1,28 @@
 const http = require('http')
+const url = require('url')
+
+const items = []
 
 const server = http.createServer(function (req, res) {
+    switch (req.method) {
+        case 'POST':
+            let item = ''
+            req.setEncoding('utf8')
 
-    const url = 'http://google.pl'
+            req.on('data', function (chunk) {
+                item += chunk
+            })
 
-    let body = '<p>Redirection to <a href="' + url + '">' + url + '</a></p>'
-    res.setHeader('Location', url)
-    res.setHeader('Content-Length', body.length)
-    res.setHeader('Content-Type', 'text/html')
+            req.on('end', function () {
+                items.push(item)
+                res.end()
+            })
+            break
 
-    res.statusCode = 302
-    res.end(body)
+        default:
+            return
+    }
+
 })
 
 server.listen(3000)
