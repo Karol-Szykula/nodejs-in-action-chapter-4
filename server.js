@@ -18,6 +18,12 @@ const server = http.createServer(function (req, res) {
                 res.end()
             })
             break
+        case 'GET':
+            items.forEach(function (item, i) {
+                res.write(i + ') ' + item + '\n')
+            })
+            res.end()
+            break
 
         default:
             return
