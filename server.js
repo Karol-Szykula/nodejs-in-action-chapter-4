@@ -1,13 +1,14 @@
+'use strict'
 const http = require('http')
 const url = require('url')
 
-const items = ['Buy a book', 'Read a book']
+let items = ['Buy a book', 'Read a book', 'Buy a milk']
 
 const server = http.createServer(function (req, res) {
     switch (req.method) {
 
         case 'POST':
-            let item = ''
+            var item = ''
             req.setEncoding('utf8')
 
             req.on('data', function (chunk) {
@@ -20,26 +21,39 @@ const server = http.createServer(function (req, res) {
             })
             break
 
-        // case 'PUT':
-        //     req.setEncoding('utf8')
+        case 'PUT':
+            var item = ''
+            req.setEncoding('utf8')
 
-        //     path = url.parse(req.url).pathname
-        //     i = parseInt(path.slice(1), 10)
+            req.on('data', function (chunk) {
+                item += chunk
+            })
 
-        //     req.on('data', function (chunk) {
-        //         item += chunk
-        //     })
+            var path = url.parse(req.url).pathname
+            var i = parseInt(path.slice(1), 10)
 
-        //     if (isNaN(i)) {
-        //         res.statusCode = 400
-        //         res.end('Wrong identifier of an element')
-        //     } else if (!items[i]) {
-        //         res.statusCode = 400
-        //         res.end('Element has not been found')
-        //     } else {
-        //         items[i].join(item)
-        //     }
-        //     break
+            if (isNaN(i)) {
+                res.statusCode = 400
+                res.end('Wrong identifier of an element')
+            } else if (!items[i]) {
+                res.statusCode = 400
+                res.end('Element has not been found')
+            } else {
+                req.on('end', function () {
+                    var oldItem = items[i]
+                    var newItem = oldItem.concat(item)
+
+                    var rearOfOldArray = items.slice(i + 1, items.length)
+
+                    var newItems = items.slice(0, i)
+                    newItems.push(newItem)
+                    newItems = newItems.concat(rearOfOldArray)
+
+                    items = newItems
+                    res.end('OK\n')
+                })
+            }
+            break
 
         case 'GET':
             const body = items.map(function (item, i) {
@@ -51,8 +65,8 @@ const server = http.createServer(function (req, res) {
             break
 
         case 'DELETE':
-            let path = url.parse(req.url).pathname
-            let i = parseInt(path.slice(1), 10)
+            var path = url.parse(req.url).pathname
+            var i = parseInt(path.slice(1), 10)
 
             if (isNaN(i)) {
                 res.statusCode = 400
