@@ -1,7 +1,7 @@
 const http = require('http')
 const url = require('url')
 
-const items = []
+const items = ['Buy a book', 'Read a book']
 
 const server = http.createServer(function (req, res) {
     switch (req.method) {
