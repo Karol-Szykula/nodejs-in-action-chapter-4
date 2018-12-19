@@ -19,9 +19,11 @@ const server = http.createServer(function (req, res) {
             })
             break
         case 'GET':
-            items.forEach(function (item, i) {
-                res.write(i + ') ' + item + '\n')
-            })
+            const body = items.map((item, i) => {
+                return i + ')' + item
+            }).join('\n')
+            res.setHeader('Content-Length', Buffer.byteLength(body))
+            res.setHeader('Content-Type', 'text/plain; charset="utf-8"')
             res.end()
             break
 
