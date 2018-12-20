@@ -1,33 +1,89 @@
+'use strict'
 const http = require('http')
-const parse = require('url').parse
-const join = require('path').join
-const fs = require('fs')
-const root = __dirname
+const url = require('url')
 
-const server = http.createServer((req, res) => {
-    const url = parse(req.url)
-    const path = join(root, url.pathname)
+let items = ['Buy a book', 'Read a book', 'Buy a milk']
 
-    fs.stat(path, (err, stat) => {
-        if (err) {
-            if ('ENOENT' == err.code) {
-                res.statusCode = 404
-                res.end('Not found')
-            } else {
-                res.statusCode = 500
-                res.end('Internal server error')
-            }
-        } else {
-            const stream = fs.createReadStream(path)
+const server = http.createServer(function (req, res) {
+    switch (req.method) {
 
-            stream.pipe(res)
+        case 'POST':
+            var item = ''
+            req.setEncoding('utf8')
 
-            stream.on('error', (err) => {
-                res.statusCode = 500
-                res.end('Internal server error')
+            req.on('data', function (chunk) {
+                item += chunk
             })
-        }
-    })
+
+            req.on('end', function () {
+                items.push(item)
+                res.end()
+            })
+            break
+
+        case 'PUT':
+            var item = ''
+            req.setEncoding('utf8')
+
+            req.on('data', function (chunk) {
+                item += chunk
+            })
+
+            var path = url.parse(req.url).pathname
+            var i = parseInt(path.slice(1), 10)
+
+            if (isNaN(i)) {
+                res.statusCode = 400
+                res.end('Wrong identifier of an element')
+            } else if (!items[i]) {
+                res.statusCode = 400
+                res.end('Element has not been found')
+            } else {
+                req.on('end', function () {
+                    var oldItem = items[i]
+                    var newItem = oldItem.concat(item)
+
+                    var rearOfOldArray = items.slice(i + 1, items.length)
+
+                    var newItems = items.slice(0, i)
+                    newItems.push(newItem)
+                    newItems = newItems.concat(rearOfOldArray)
+
+                    items = newItems
+                    res.end('OK\n')
+                })
+            }
+            break
+
+        case 'GET':
+            const body = items.map(function (item, i) {
+                return i + ') ' + item
+            }).join('\n')
+            res.setHeader('Content-Length', Buffer.byteLength(body))
+            res.setHeader('Content-Type', 'text/plain charset="utf-8"')
+            res.end(body)
+            break
+
+        case 'DELETE':
+            var path = url.parse(req.url).pathname
+            var i = parseInt(path.slice(1), 10)
+
+            if (isNaN(i)) {
+                res.statusCode = 400
+                res.end('Wrong identifier of an element')
+            } else if (!items[i]) {
+                res.statusCode = 400
+                res.end('Element has not been found')
+            } else {
+                items.splice(i, 1)
+                res.end('OK\n')
+            }
+            break
+
+        default:
+            return
+    }
+
 })
 
 server.listen(3000)
