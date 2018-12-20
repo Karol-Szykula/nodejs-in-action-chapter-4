@@ -1,40 +1,64 @@
-'use strict'
-const http = require('http')
-const url = require('url')
-const responses = require('./responses/responses')
-const qs = require('querystring')
+var http = require('http')
+var formidable = require('formidable')
 
-const show = responses.show
-const notFound = responses.notFound
+var server = http.createServer((req, res) => {
 
-let items = ['Buy a book', 'Read a book', 'Buy a milk']
+    switch (req.method) {
 
-function add(req, res) {
-    let body = ''
-    req.setEncoding('utf8')
-    req.on('data', (chunk) => { body += chunk })
-    req.on('end', () => {
-        const obj = qs.parse(body)
-        items.push(obj.item)
-        show(res)
-    })
-}
+        case 'GET':
+            show(req, res)
+            break
 
-var server = http.createServer(function (req, res) {
-    if ('/' == req.url) {
-        switch (req.method) {
-            case 'GET':
-                show(res);
-                break;
-            case 'POST':
-                add(req, res);
-                break;
-            default:
-                badRequest(res);
-        }
-    } else {
-        notFound(res);
+        case 'POST':
+            upload(req, res)
+            break
     }
 })
 
-server.listen(3000)
+const show = (req, res) => {
+    var html = '<form method="post" action="/" enctype="multipart/form-data">'
+        + '<p><input type="text" name="name" /><p>'
+        + '<p><input type="file" name="file" /></p>'
+        + '<p><input type="submit" value="Wyślij" /></p>'
+        + '</form>'
+    res.setHeader('Content-Type', 'text/html')
+    res.setHeader('Content-Length', Buffer.byteLength(html))
+    res.end(html)
+}
+
+const upload = (req, res) => {
+
+    if ((!isFormData(req))) {
+        res.statusCode = 400
+        res.end('Wrong request: expected multipart type')
+        return
+    }
+    var form = new formidable.IncomingForm()
+
+    form.on('field', (field, value) => {
+        console.log(field)
+        console.log(value)
+    })
+
+    form.on('file', (name, file) => {
+        console.log(name)
+        console.log(file)
+    })
+
+    form.on('progress', (bytesReceived, bytesExpected) => {
+        var percent = Math.floor(bytesReceived / bytesExpected * 100)
+        console.log(percent)
+    })
+
+    form.on('end', () => {
+        res.end('Ended sending files')
+    })
+
+    form.parse(req)
+}
+
+const isFormData = (req) => {
+    var type = req.headers['content-type'] || ''
+    return 0 == type.indexOf('multipart/form-data')
+}
+
