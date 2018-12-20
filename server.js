@@ -9,13 +9,8 @@ const server = http.createServer((req, res) => {
     const path = join(root, url.pathname)
     const stream = fs.createReadStream(path)
 
-    stream.on('data', function (chunk) {
-        res.write(chunk)
-    })
+    stream.pipe(res)
 
-    stream.on('end', () => {
-        res.end()
-    })
 })
 
 server.listen(3000)
