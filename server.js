@@ -1,7 +1,13 @@
 var http = require('http')
 var formidable = require('formidable')
+var fs = require('fs')
 
-var server = http.createServer((req, res) => {
+var options = {
+    key: fs.readFileSync('/home/karol/prog/node-in-action/ssl/key.pem'),
+    cert: fs.readFileSync('/home/karol/prog/node-in-action/ssl/key-cert.pem')
+}
+
+var server = http.createServer(options, (req, res) => {
 
     switch (req.method) {
 
@@ -62,3 +68,4 @@ const isFormData = (req) => {
     return 0 == type.indexOf('multipart/form-data')
 }
 
+server.listen(3000)
