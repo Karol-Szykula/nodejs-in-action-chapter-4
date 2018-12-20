@@ -11,6 +11,11 @@ const server = http.createServer((req, res) => {
 
     stream.pipe(res)
 
+    stream.on('error', (err) => {
+        res.statusCode = 500
+        res.end('Internal server error')
+    })
+
 })
 
 server.listen(3000)
